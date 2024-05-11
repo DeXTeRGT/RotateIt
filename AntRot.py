@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt, pyqtSignal, QObject
 import sys
 import Compasswidget
 import xmltodict
-from UDP_Server import WorkerUDPThread
-from QueryRotor import QueryRotorClass
+from UDPHelper import WorkerUDPThread
+from RotorHelper import QueryRotorClass
 from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
 
