@@ -11,7 +11,7 @@ ReadConfiguration.read('Configuration.conf')
 class Compasswidget(QtWidgets.QLabel):
 
     BeamAngle = ReadConfiguration.getint('ROTOR','ANTENNA_BEAM_WIDTH')
-
+    ShowAntennaBW = ReadConfiguration.getboolean('ROTOR','SHOW_ANTENNA_BEAM_WIDTH')
     def __init__(self, parent):
         super(Compasswidget, self).__init__(parent)
 
@@ -124,21 +124,21 @@ class Compasswidget(QtWidgets.QLabel):
         # PP.lineTo(-20,-60)
 
         #painter.drawArc(0,-20, 30,30, 0*16, 90*16)
+        if (self.ShowAntennaBW):
+            painter.setPen(QPen(QColor(255,51,255,100), 2, Qt.DotLine))
+            BeamWidthOne = QLineF()
+            BeamWidthTwo = QLineF()
 
-        painter.setPen(QPen(QColor(255,51,255,100), 2, Qt.DotLine))
-        BeamWidthOne = QLineF()
-        BeamWidthTwo = QLineF()
+            BeamWidthOne.setP1(QPointF(0.1,0.1))
+            BeamWidthOne.setAngle(90 + (self.BeamAngle/2))
+            BeamWidthOne.setLength(50)
 
-        BeamWidthOne.setP1(QPointF(0.1,0.1))
-        BeamWidthOne.setAngle(90 + (self.BeamAngle/2))
-        BeamWidthOne.setLength(50)
+            BeamWidthTwo.setP1(QPointF(0.1,0.1))
+            BeamWidthTwo.setAngle(90- (self.BeamAngle/2))
+            BeamWidthTwo.setLength(50)
 
-        BeamWidthTwo.setP1(QPointF(0.1,0.1))
-        BeamWidthTwo.setAngle(90- (self.BeamAngle/2))
-        BeamWidthTwo.setLength(50)
-
-        painter.drawLine (BeamWidthOne)
-        painter.drawLine (BeamWidthTwo)
+            painter.drawLine (BeamWidthOne)
+            painter.drawLine (BeamWidthTwo)
 
         
         painter.restore()
