@@ -1,20 +1,22 @@
-# Logic to draw compass taken from David Boddie example on https://wiki.python.org/moin/PyQt/Compass widget
-# updated for pyqt5.
-
-
 from PyQt5 import QtWidgets, QtCore, QtGui
 # from mainwindow import Ui_MainWindow
-from PyQt5.QtGui import QPainter, QPolygon, QFont, QFontMetricsF, QPen, QPalette, QColor, QBrush
-from PyQt5.QtCore import QPointF, QPoint, Qt
+from PyQt5.QtGui import QPainter, QPolygon, QFont, QFontMetricsF, QPen, QPalette, QColor, QBrush, QPainterPath
+from PyQt5.QtCore import QPointF, QPoint, Qt, QLineF
+from configparser import ConfigParser
+
+ReadConfiguration = ConfigParser()
+ReadConfiguration.read('Configuration.conf')
 
 
 class Compasswidget(QtWidgets.QLabel):
+
+    BeamAngle = ReadConfiguration.getint('ROTOR','ANTENNA_BEAM_WIDTH')
 
     def __init__(self, parent):
         super(Compasswidget, self).__init__(parent)
 
         self.setStyleSheet('QFrame {background-color:(239,100,100);}')
-        self.resize(230, 230)
+        self.resize(341, 341)
         self._angle = 0
         self._secangle = 0
         self._margins = 10
@@ -90,6 +92,7 @@ class Compasswidget(QtWidgets.QLabel):
         painter.setPen(QPen(Qt.NoPen))
         painter.setBrush(self.palette().brush(QPalette.Shadow))
 
+
         # painter.drawPolygon(
         #     QPolygon([QPoint(-10, 0), QPoint(0, -45), QPoint(10, 0),
         #     QPoint(0, 45), QPoint(-10, 0)])
@@ -98,10 +101,10 @@ class Compasswidget(QtWidgets.QLabel):
         #painter.setBrush(self.palette().brush(QPalette.Highlight))
     
 
-        painter.setPen(QPen(QColor(121,252,50,100), 0, Qt.SolidLine))
+        # painter.setPen(QPen(QColor(121,252,50,100), 0, Qt.SolidLine))
 
-        painter.setBrush(QBrush(QColor(52, 235, 225,200), Qt.SolidPattern))
-        painter.drawPolygon([QPoint(0,0),QPoint(20,-50),QPoint(-20,-50)])
+        # painter.setBrush(QBrush(QColor(52, 235, 225,200), Qt.SolidPattern))
+        # painter.drawPolygon([QPoint(0,0),QPoint(20,-50),QPoint(-20,-50)])
         
         painter.setPen(QtCore.Qt.red)
         painter.drawLine(0, 0, 0, -45)
@@ -112,9 +115,32 @@ class Compasswidget(QtWidgets.QLabel):
             QPolygon([QPoint(-5, -25), QPoint(0, -45), QPoint(5, -25),
             QPoint(0, -30), QPoint(-5, -25)])
             )
+        # painter.drawRect(20,-40,-40,40)
+
+        #XX = QLineF(0,0,-20,60)
+        # PP = QPainterPath()
+        # PP.lineTo(20,-60)
+        # PP.moveTo(0,0)
+        # PP.lineTo(-20,-60)
+
+        #painter.drawArc(0,-20, 30,30, 0*16, 90*16)
+
+        painter.setPen(QPen(QColor(255,51,255,100), 2, Qt.DotLine))
+        BeamWidthOne = QLineF()
+        BeamWidthTwo = QLineF()
+
+        BeamWidthOne.setP1(QPointF(0.1,0.1))
+        BeamWidthOne.setAngle(90 + (self.BeamAngle/2))
+        BeamWidthOne.setLength(50)
+
+        BeamWidthTwo.setP1(QPointF(0.1,0.1))
+        BeamWidthTwo.setAngle(90- (self.BeamAngle/2))
+        BeamWidthTwo.setLength(50)
+
+        painter.drawLine (BeamWidthOne)
+        painter.drawLine (BeamWidthTwo)
+
         
-
-
         painter.restore()
 
     def drawSecNeedle(self, painter):
@@ -149,6 +175,7 @@ class Compasswidget(QtWidgets.QLabel):
             QPolygon([QPoint(-5, -25), QPoint(0, -45), QPoint(5, -25),
             QPoint(0, -30), QPoint(-5, -25)])
             )
+
 
 
         painter.restore()
