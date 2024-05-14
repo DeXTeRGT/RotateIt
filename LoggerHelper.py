@@ -5,17 +5,16 @@ from configparser import ConfigParser
 ReadConfiguration = ConfigParser()
 ReadConfiguration.read('Configuration.conf')
 
-
 coloredlogs.install(level=ReadConfiguration.get('LOGGER','LOG_LEVEL'))
+
+LogToFile = ReadConfiguration.getboolean('LOGGER','LOG_TO_FILE')
 
 def getLoggerHandle():
     logger = logging.getLogger(__name__)
-
-    # ch = logging.FileHandler(r'log.txt')
-    # ch.setLevel(logging.DEBUG)
-    # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    # # add formatter to ch
-    # ch.setFormatter(formatter)
-    # # add ch to logger
-    # logger.addHandler(ch)
+    if (LogToFile):
+        FileLogger = logging.FileHandler(r'RotateIt.log')
+        FileLogger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        FileLogger.setFormatter(formatter)
+        logger.addHandler(FileLogger)
     return logger
