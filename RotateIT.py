@@ -113,17 +113,38 @@ class Ui(QtWidgets.QMainWindow):
     def UpdateUDP(self, udp_data):
         data = xmltodict.parse(udp_data)
         try:
-            if data['PST'].get('STOP') is not None:
-                logger.debug ("Received STOP command via UDP Client")
-                SerialCommand = 'S' + '\r\n' 
+            if data.get('PST') is not None:
+                logger.debug ("Received an UDP package from DXLog")
 
-            if data['PST'].get('AZIMUTH') is not None:
-                logger.debug ("Received MOVE command via UDP Client")
-                SerialCommand = 'M' + data['PST']['AZIMUTH'] + '\r\n'
-                self.SerialIO_Send(SerialCommand)
-                self.Compasswidget.setSecAngle(int(data['PST']['AZIMUTH']))
+                if data['PST'].get('STOP') is not None:
+                    logger.debug ("Received STOP command via UDP Client from DXLog")
+                    SerialCommand = 'S' + '\r\n' 
+                    self.SerialIO_Send(SerialCommand)
+
+                if data['PST'].get('AZIMUTH') is not None:
+                    logger.debug ("Received MOVE command via UDP Client from DXLog")
+                    SerialCommand = 'M' + data['PST']['AZIMUTH'] + '\r\n'
+                    self.SerialIO_Send(SerialCommand)
+                    self.Compasswidget.setSecAngle(int(data['PST']['AZIMUTH']))
+
+            if data.get('N1MMRotor') is not None:
+                logger.debug ("Received an UDP package from N1MM")
+
+                if data['N1MMRotor'].get('goazi') is not None:
+                    logger.debug ("Received MOVE command via UDP Client from N1MM")
+                    SerialCommand = 'M' + data['N1MMRotor']['goazi'][:-2] + '\r\n'
+                    self.SerialIO_Send(SerialCommand)
+                    self.Compasswidget.setSecAngle(int(float(data['N1MMRotor']['goazi'])))
+
+                if data['N1MMRotor'].get('stop') is not None:
+                    logger.debug ("Received STOP command via UDP Client from N1MM")
+                    SerialCommand = 'S' + '\r\n' 
+                    self.SerialIO_Send(SerialCommand)
+
         except:
-            print(data)
+            logger.critical("Received an unparsable package via UDP - dumping data: " +  data)
+            pass
+
 
     def StopRotor(self):
         self.SerialIO_Send ("S\r\n")

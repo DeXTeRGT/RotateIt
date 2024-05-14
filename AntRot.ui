@@ -369,7 +369,7 @@
      </font>
     </property>
     <property name="text">
-     <string>COM PORT</string>
+     <string>COM PORT INFO</string>
     </property>
    </widget>
    <widget class="Line" name="line_4">
