@@ -7,6 +7,7 @@ from UDPHelper import WorkerUDPThread
 from RotorHelper import QueryRotorClass
 from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
+from SettingsHelper import SettingsWindow
 
 ReadConfiguration = ConfigParser()
 ReadConfiguration.read('Configuration.conf')
@@ -23,7 +24,9 @@ class Ui(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('icon.png'))
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setFixedSize(260, 490)
+        self.setFixedSize(260, 520)
+
+        self.dialog = SettingsWindow(self)
 
         self.RotDetails.setText('<font color=blue>'+ ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID')+ '</font>')
         self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
@@ -51,6 +54,8 @@ class Ui(QtWidgets.QMainWindow):
         self.XXWorker.UpdateUDP.connect(self.UpdateUDP)
         self.XXWorker.moveToThread(self.xxThread)
         self.xxThread.start()
+
+        self.Settings.pressed.connect(self.DoSettings)
 
         self.ccw.pressed.connect(self.CCWClicked)
         self.ccw.released.connect(self.CCWReleased)
@@ -178,6 +183,8 @@ class Ui(QtWidgets.QMainWindow):
         self.SerialIO_Send(SetHeddingTo)
         self.Compasswidget.setSecAngle(int(self.goToHedding.text()))
 
+    def DoSettings(self):
+        self.dialog.show()
 
 
 if __name__ == '__main__':
