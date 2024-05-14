@@ -26,12 +26,15 @@ class WorkerUDPThread(QtCore.QObject):
         port = ReadConfiguration.getint('UDP_SERVER','UDP_LISTEN_PORT')
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            self.sock.bind((ip,port))
-            logger.info("Opened UDP server on interface " + ip + " and port " + str(port))
-        except Exception as e:
-            logger.critical(e)
-        self.run()
+        if (ReadConfiguration.getboolean('UDP_SERVER','UDP_RUN_SERVER')):
+            try:
+                self.sock.bind((ip,port))
+                logger.info("Opened UDP server on interface " + ip + " and port " + str(port))
+            except Exception as e:
+                logger.critical(e)
+            self.run()
+        else:
+            logger.info ("UDP Server Configured but NOT running - if is needed, please enable it from configuration file and restart")
 
     def run(self):
         while True:

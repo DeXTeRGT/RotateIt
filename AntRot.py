@@ -13,18 +13,31 @@ ReadConfiguration.read('Configuration.conf')
 
 logger  = getLoggerHandle()
 
-class Communicate(QObject):
-    sig = pyqtSignal(str)
+# class Communicate(QObject):
+#     sig = pyqtSignal(str)
 
 class Ui(QtWidgets.QMainWindow):
+    SerialOK = False
+
     def __init__(self):
         super(Ui, self).__init__()
         uic.loadUi('AntRot.ui', self)
 
         self.setWindowIcon(QtGui.QIcon('icon.png'))
-        self.setWindowTitle(ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID'))
+        #self.setWindowTitle(ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID'))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setFixedSize(625, 250)
+        #self.setFixedSize(625, 250)
+
+        self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
+        self.PortLabel.setText("PORT: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_PORT'))
+
+        self.ComPort.setText("PORT: " +  ReadConfiguration.get('SERIAL_COM','SERIAL_PORT'))
+        self.ComPortBaud.setText("BAUD: " +  ReadConfiguration.get('SERIAL_COM','SERIAL_BAUD'))
+
+        if (ReadConfiguration.getboolean('UDP_SERVER','UDP_RUN_SERVER')):
+            self.UdpServer.setText("UDP Server <font color=green>RUNNING</font")
+        else:
+            self.UdpServer.setText("UDP Server <font color=red>STOPPED</font>")
 
         self.worker = QueryRotorClass()
         self.SerialWorkerThread = QtCore.QThread()
@@ -52,20 +65,44 @@ class Ui(QtWidgets.QMainWindow):
         self.goToHedding.returnPressed.connect(self.GoToHedding)
     
         self.SerialIO = QtSerialPort.QSerialPort("COM5", baudRate=QtSerialPort.QSerialPort.Baud9600, readyRead=self.SerialIO_Receive)
-        self.SerialIO.open(QtCore.QIODevice.ReadWrite)
+
+        logger.info("Trying to open Serial Port")
+        if(self.SerialIO.open(QtCore.QIODevice.ReadWrite)):
+            self.SerialOK = True
+            logger.info("Serial Port Opened OK")
+        else:
+            self.SerialOK = False
+            logger.critical("Error opening Serial Port - please check settings or PORT NUMBER in configuration file")
 
         self.show()
 
     @QtCore.pyqtSlot()
     def SerialIO_Receive(self):
-        while self.SerialIO.canReadLine():
-            logger.debug ("Event triggered for Incoming Serial Data")
-            self.SerialReceiveData(self.SerialIO.readLine().data().decode().rstrip())
+        if (self.SerialOK):
+            while self.SerialIO.canReadLine():
+                logger.debug ("Event triggered for Incoming Serial Data")
+                self.SerialReceiveData(self.SerialIO.readLine().data().decode().rstrip())
+        else:
+            logger.critical ("Serial Port communication error - I might retry next pass... or not")
+            if (self.SerialIO.open(QtCore.QIODevice.ReadWrite)):
+                self.SerialOK = True
+            else:
+                logger.critical ("Serial Port communication error - You haven't solve your serial port problems huh?!")
+                self.SerialOK = False
 
     @QtCore.pyqtSlot()
     def SerialIO_Send(self, SerialIO_Data):
         logger.debug ("Event triggered for Outgoing Serial Data")
-        self.SerialIO.write(SerialIO_Data.encode())
+        if (self.SerialOK):
+            self.SerialIO.write(SerialIO_Data.encode())
+        else:
+            logger.critical ("Serial Port communication error - I might retry next pass... or not")
+            if (self.SerialIO.open(QtCore.QIODevice.ReadWrite)):
+                self.SerialOK = True
+            else:
+                logger.critical ("Serial Port communication error - You haven't solve your serial port problems huh?!")
+                self.SerialOK = False
+
 
     def SerialSendData(self, SerialIO_Data):
         self.SerialIO_Send(SerialIO_Data)
