@@ -13,9 +13,6 @@ ReadConfiguration.read('Configuration.conf')
 
 logger  = getLoggerHandle()
 
-# class Communicate(QObject):
-#     sig = pyqtSignal(str)
-
 class Ui(QtWidgets.QMainWindow):
     SerialOK = False
 
@@ -24,7 +21,7 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi('AntRot.ui', self)
 
         self.setWindowIcon(QtGui.QIcon('icon.png'))
-        #self.setWindowTitle(ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID'))
+
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setFixedSize(260, 490)
 
