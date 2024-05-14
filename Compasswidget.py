@@ -10,8 +10,8 @@ ReadConfiguration.read('Configuration.conf')
 
 class Compasswidget(QtWidgets.QLabel):
 
-    BeamAngle = ReadConfiguration.getint('ROTOR','ANTENNA_BEAM_WIDTH')
-    ShowAntennaBW = ReadConfiguration.getboolean('ROTOR','SHOW_ANTENNA_BEAM_WIDTH')
+    BeamAngle = ReadConfiguration.getint('ANTENNA','ANTENNA_BEAM_WIDTH_DEG')
+    ShowAntennaBW = ReadConfiguration.getboolean('ANTENNA','SHOW_ANTENNA_BEAM_WIDTH')
     def __init__(self, parent):
         super(Compasswidget, self).__init__(parent)
 
