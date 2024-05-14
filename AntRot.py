@@ -26,8 +26,9 @@ class Ui(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('icon.png'))
         #self.setWindowTitle(ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID'))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        #self.setFixedSize(625, 250)
+        self.setFixedSize(260, 490)
 
+        self.RotDetails.setText('<font color=blue>'+ ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID')+ '</font>')
         self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
         self.PortLabel.setText("PORT: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_PORT'))
 
@@ -35,9 +36,9 @@ class Ui(QtWidgets.QMainWindow):
         self.ComPortBaud.setText("BAUD: " +  ReadConfiguration.get('SERIAL_COM','SERIAL_BAUD'))
 
         if (ReadConfiguration.getboolean('UDP_SERVER','UDP_RUN_SERVER')):
-            self.UdpServer.setText("UDP Server <font color=green>RUNNING</font")
+            self.UdpServer.setText("UDP STATE <font color=green>RUN</font")
         else:
-            self.UdpServer.setText("UDP Server <font color=red>STOPPED</font>")
+            self.UdpServer.setText("UDP STATE <font color=red>STOP</font>")
 
         self.worker = QueryRotorClass()
         self.SerialWorkerThread = QtCore.QThread()
