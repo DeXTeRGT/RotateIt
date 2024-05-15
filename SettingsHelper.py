@@ -1,9 +1,12 @@
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt5.QtWidgets import QMessageBox
 from configparser import ConfigParser
+from LoggerHelper import getLoggerHandle
 
 ReadConfiguration = ConfigParser()
 ReadConfiguration.read('Configuration.conf')
+logger  = getLoggerHandle()
 
 class SettingsWindow (QtWidgets.QMainWindow):
     def __init__(self,parent=None):
@@ -37,9 +40,44 @@ class SettingsWindow (QtWidgets.QMainWindow):
         self.LogToFile.setChecked(ReadConfiguration.getboolean('LOGGER','LOG_TO_FILE'))
         self.LogName.setText(ReadConfiguration.get('LOGGER','LOG_FILE_NAME'))
 
-
+    def CreateInfoDlg(self,DlgText):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(DlgText)
+        msg.setWindowTitle("RotateIT")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+        self.hide()
 
     def SaveSettings (self):
-        print(self.ComPortList.currentText())
-        print(self.BaudRateList.currentText())
-        print(self.UDPServerEnabled.isChecked())
+
+
+
+
+        ReadConfiguration.set('SERIAL_COM','SERIAL_PORT',self.ComPortList.currentText())
+        ReadConfiguration.set('SERIAL_COM','SERIAL_BAUD',self.BaudRateList.currentText())
+
+        ReadConfiguration.set('UDP_SERVER','UDP_RUN_SERVER',str(self.UDPServerEnabled.isChecked()))
+        ReadConfiguration.set('UDP_SERVER','UDP_LISTEN_IF',self.IPAddress.text())
+        ReadConfiguration.set('UDP_SERVER','UDP_LISTEN_PORT',self.IPPort.text())
+
+        ReadConfiguration.set('ROTOR','ROTOR_ID',self.RotorID.text())
+        ReadConfiguration.set('ROTOR','STATION_CALL',self.StationCall.text())
+        ReadConfiguration.set('ROTOR','STATION_GRID',self.StationGrid.text())
+        ReadConfiguration.set('ROTOR','ROTOR_QUERY_INTERVAL',self.RotorQueryInterval.text())
+
+        ReadConfiguration.set('ANTENNA','SHOW_ANTENNA_BEAM_WIDTH',str(self.ShowAntennaBeam.isChecked()))
+        ReadConfiguration.set('ANTENNA','ANTENNA_BEAM_WIDTH_DEG',self.BeamWidth.text())
+
+        ReadConfiguration.set('LOGGER','LOG_LEVEL',self.DebugLevel.currentText())
+        ReadConfiguration.set('LOGGER','LOG_TO_FILE',str(self.LogToFile.isChecked()))
+        ReadConfiguration.set('LOGGER','LOG_FILE_NAME',self.LogName.text())
+        
+        try:
+            with open('Configuration.conf', 'w') as configfile:
+                ReadConfiguration.write(configfile)
+                logger.debug ("Settings were saved successfully! Well done!")
+                self.CreateInfoDlg("Settings were saved successfully! \n Please restart to load new settings!")
+
+        except IOError as error:
+             logger.critical("Critical error occured when saving the settings: " + error.strerror())
