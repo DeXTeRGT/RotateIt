@@ -8,6 +8,7 @@ from RotorHelper import QueryRotorClass
 from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
 from SettingsHelper import SettingsWindow
+from AboutHelper import AboutWindow
 
 ReadConfiguration = ConfigParser()
 ReadConfiguration.read('Configuration.conf')
@@ -27,6 +28,7 @@ class Ui(QtWidgets.QMainWindow):
         self.setFixedSize(260, 520)
 
         self.dialog = SettingsWindow(self)
+        self.AboutDialog = AboutWindow(self)
 
         self.RotDetails.setText('<font color=blue>'+ ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID')+ '</font>')
         self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
@@ -56,6 +58,7 @@ class Ui(QtWidgets.QMainWindow):
         self.xxThread.start()
 
         self.Settings.pressed.connect(self.DoSettings)
+        self.About.pressed.connect(self.DoAbout)
 
         self.ccw.pressed.connect(self.CCWClicked)
         self.ccw.released.connect(self.CCWReleased)
@@ -67,7 +70,7 @@ class Ui(QtWidgets.QMainWindow):
         self.go.pressed.connect (self.GoToHedding)
         self.goToHedding.returnPressed.connect(self.GoToHedding)
     
-        self.SerialIO = QtSerialPort.QSerialPort("COM5", baudRate=QtSerialPort.QSerialPort.Baud9600, readyRead=self.SerialIO_Receive)
+        self.SerialIO = QtSerialPort.QSerialPort(ReadConfiguration.get('SERIAL_COM','SERIAL_PORT'), baudRate=ReadConfiguration.getint('SERIAL_COM','SERIAL_BAUD'), readyRead=self.SerialIO_Receive)
 
         logger.info("Trying to open Serial Port")
         if(self.SerialIO.open(QtCore.QIODevice.ReadWrite)):
@@ -186,6 +189,8 @@ class Ui(QtWidgets.QMainWindow):
     def DoSettings(self):
         self.dialog.show()
 
+    def DoAbout(self):
+        self.AboutDialog.show()
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
