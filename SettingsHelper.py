@@ -40,6 +40,10 @@ class SettingsWindow (QtWidgets.QMainWindow):
         self.LogToFile.setChecked(ReadConfiguration.getboolean('LOGGER','LOG_TO_FILE'))
         self.LogName.setText(ReadConfiguration.get('LOGGER','LOG_FILE_NAME'))
 
+        self.SchedEnable.setChecked(ReadConfiguration.getboolean('SCHED','SCHED_ENABLE'))
+        self.SchedTime.setText(ReadConfiguration.get('SCHED','SCHED_TIME'))
+        self.SchedHedding.setValue(ReadConfiguration.getint('SCHED','SCHED_HEDDING'))
+
     def CreateInfoDlg(self,DlgText):
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Information)
@@ -49,10 +53,17 @@ class SettingsWindow (QtWidgets.QMainWindow):
         msg.exec_()
         self.hide()
 
+    def CreateCriticalDlg(self,DlgText):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.critical)
+        msg.setText(DlgText)
+        msg.setWindowTitle("RotateIT")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+        self.hide()
+
+
     def SaveSettings (self):
-
-
-
 
         ReadConfiguration.set('SERIAL_COM','SERIAL_PORT',self.ComPortList.currentText())
         ReadConfiguration.set('SERIAL_COM','SERIAL_BAUD',self.BaudRateList.currentText())
@@ -72,12 +83,19 @@ class SettingsWindow (QtWidgets.QMainWindow):
         ReadConfiguration.set('LOGGER','LOG_LEVEL',self.DebugLevel.currentText())
         ReadConfiguration.set('LOGGER','LOG_TO_FILE',str(self.LogToFile.isChecked()))
         ReadConfiguration.set('LOGGER','LOG_FILE_NAME',self.LogName.text())
-        
-        try:
-            with open('Configuration.conf', 'w') as configfile:
-                ReadConfiguration.write(configfile)
-                logger.debug ("Settings were saved successfully! Well done!")
-                self.CreateInfoDlg("Settings were saved successfully! \n Please restart to load new settings!")
 
-        except IOError as error:
-             logger.critical("Critical error occured when saving the settings: " + error.strerror())
+        ReadConfiguration.set('SCHED','SCHED_ENABLE',str(self.SchedEnable.isChecked()))
+        ReadConfiguration.set('SCHED','SCHED_TIME',self.SchedTime.text())
+        ReadConfiguration.set('SCHED','SCHED_HEDDING',str(self.SchedHedding.value()))
+
+        
+        # try:
+        with open('Configuration.conf', 'w') as configfile:
+            ReadConfiguration.write(configfile)
+            
+        logger.debug ("Settings were saved successfully! Well done!")
+        self.CreateInfoDlg("Settings were saved successfully! \n Please restart to load new settings!")
+
+        # except IOError as error:
+        #      self.CreateCriticalDlg("Critical error occured when saving the settings: \n" + error.strerror())
+        #      logger.critical("Critical error occured when saving the settings: " + error.strerror())

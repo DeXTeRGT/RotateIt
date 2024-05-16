@@ -20,7 +20,7 @@
    <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>ROTATE IT!</string>
+   <string>ROTATE IT! V1</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>

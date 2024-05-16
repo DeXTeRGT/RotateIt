@@ -1,14 +1,16 @@
 from PyQt5 import QtWidgets, uic, QtCore, QtSerialPort, QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QObject
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
 import sys
 import Compasswidget
 import xmltodict
+import datetime
 from UDPHelper import WorkerUDPThread
 from RotorHelper import QueryRotorClass
 from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
 from SettingsHelper import SettingsWindow
 from AboutHelper import AboutWindow
+import time
 
 ReadConfiguration = ConfigParser()
 ReadConfiguration.read('Configuration.conf')
@@ -30,6 +32,14 @@ class Ui(QtWidgets.QMainWindow):
         self.dialog = SettingsWindow(self)
         self.AboutDialog = AboutWindow(self)
 
+        self.fs_watcher = QtCore.QFileSystemWatcher(['Configuration.conf'])
+        self.fs_watcher.fileChanged.connect(self.file_changed)
+        
+        self.timer = QTimer()
+        self.timer.setTimerType(QtCore.Qt.VeryCoarseTimer)
+        self.timer.timeout.connect(self.StartScheduledRotor)
+
+
         self.RotDetails.setText('<font color=blue>'+ ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID')+ '</font>')
         self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
         self.PortLabel.setText("PORT: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_PORT'))
@@ -42,20 +52,33 @@ class Ui(QtWidgets.QMainWindow):
         else:
             self.UdpServer.setText("UDP STATE <font color=red>STOP</font>")
 
-        self.worker = QueryRotorClass()
+
+        if (ReadConfiguration.getboolean('SCHED','SCHED_ENABLE')):
+            self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
+            self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
+
+            logger.info("Current time is: " + str(self.CurrentTime))
+            logger.info("Scheduled time is: " + str(self.ScheduledTime))
+
+            self.diff = (self.ScheduledTime - self.CurrentTime) 
+            logger.info("Timer will trigger after: " + str(int(self.diff.seconds/60)) + " minutes")        
+            
+            self.timer.start(self.diff.seconds * 1000)
+
+        selfSerialWorker = QueryRotorClass()
         self.SerialWorkerThread = QtCore.QThread()
-        self.SerialWorkerThread.started.connect(self.worker.run)
-        self.worker.GetAZ.connect(self.SerialSendData)
-        self.worker.moveToThread(self.SerialWorkerThread)  # Move the Worker object to the Thread object
+        self.SerialWorkerThread.started.connect(selfSerialWorker.run)
+        selfSerialWorker.GetAZ.connect(self.SerialSendData)
+        selfSerialWorker.moveToThread(self.SerialWorkerThread)  # Move the Worker object to the Thread object
         self.SerialWorkerThread.start()
 
 
-        self.XXWorker = WorkerUDPThread()
-        self.xxThread = QtCore.QThread()
-        self.xxThread.started.connect (self.XXWorker.start)
-        self.XXWorker.UpdateUDP.connect(self.UpdateUDP)
-        self.XXWorker.moveToThread(self.xxThread)
-        self.xxThread.start()
+        self.UDPWorker = WorkerUDPThread()
+        self.UDPWorkerThread = QtCore.QThread()
+        self.UDPWorkerThread.started.connect (self.UDPWorker.start)
+        self.UDPWorker.UpdateUDP.connect(self.UpdateUDP)
+        self.UDPWorker.moveToThread(self.UDPWorkerThread)
+        self.UDPWorkerThread.start()
 
         self.Settings.pressed.connect(self.DoSettings)
         self.About.pressed.connect(self.DoAbout)
@@ -81,6 +104,44 @@ class Ui(QtWidgets.QMainWindow):
             logger.critical("Error opening Serial Port - please check settings or PORT NUMBER in configuration file")
 
         self.show()
+
+    def StartScheduledRotor(self):
+        SetHeddingTo = 'M' + ReadConfiguration.get('SCHED','SCHED_HEDDING') + '\r\n'
+        self.SerialIO_Send(SetHeddingTo)
+        self.Compasswidget.setSecAngle(int(ReadConfiguration.get('SCHED','SCHED_HEDDING')))
+        logger.critical("Timer Arrived - action taken")
+        self.timer.stop()
+
+    @QtCore.pyqtSlot(str)
+    def file_changed(self,path):
+        self.timer.stop()
+        ReadConfiguration = ConfigParser()
+        ReadConfiguration.read('Configuration.conf')
+        self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
+        self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
+
+        logger.info("Current time is *: " + str(self.CurrentTime))
+        logger.info("Scheduled time is *: " + str(self.ScheduledTime))
+
+        self.diff = (self.ScheduledTime - self.CurrentTime) 
+        logger.info("Timer will trigger after *: " + str(int(self.diff.seconds/60)) + " minutes")        
+        
+        self.timer.start(self.diff.seconds * 1000)
+
+
+    def UpdateRotorSchedule(self):
+            pass
+            # ReadConfiguration = ConfigParser()
+            # ReadConfiguration.read('Configuration.conf')
+            # self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
+            # self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
+
+            # logger.info("Current time is: " + str(self.CurrentTime))
+            # logger.info("Scheduled time is: " + str(self.ScheduledTime))
+
+            # self.diff = (self.ScheduledTime - self.CurrentTime) 
+            # logger.info("Timer will trigger after: " + str(self.diff.seconds/60) + " minutes")        
+            # self.timer.start(self.diff.seconds * 1000)
 
     @QtCore.pyqtSlot()
     def SerialIO_Receive(self):
