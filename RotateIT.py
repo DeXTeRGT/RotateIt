@@ -24,7 +24,7 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         uic.loadUi('./resources/AntRot.ui', self)
 
-        self.setWindowIcon(QtGui.QIcon('icon.png'))
+        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setFixedSize(260, 520)

@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5.QtWidgets import QMessageBox
 from configparser import ConfigParser
@@ -14,7 +14,7 @@ class SettingsWindow (QtWidgets.QMainWindow):
         uic.loadUi('resources/Settings.ui', self)
         self.LoadSettings()
         self.setFixedSize(250, 370)
-
+        self.setWindowIcon(QtGui.QIcon('resources/wrench.png'))
         self.SaveComSettings.clicked.connect(self.SaveSettings)
 
 
