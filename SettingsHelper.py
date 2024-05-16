@@ -90,13 +90,8 @@ class SettingsWindow (QtWidgets.QMainWindow):
         ReadConfiguration.set('SCHED','SCHED_HEDDING',str(self.SchedHedding.value()))
         ReadConfiguration.set('SCHED','SCHED_HEDDING_TOLERANCE',str(self.HeddingTolerance.text()))
         
-        # try:
         with open('config/Configuration.conf', 'w') as configfile:
             ReadConfiguration.write(configfile)
             
         logger.debug ("Settings were saved successfully! Well done!")
         self.CreateInfoDlg("Settings were saved successfully! \n Please restart to load new settings!")
-
-        # except IOError as error:
-        #      self.CreateCriticalDlg("Critical error occured when saving the settings: \n" + error.strerror())
-        #      logger.critical("Critical error occured when saving the settings: " + error.strerror())

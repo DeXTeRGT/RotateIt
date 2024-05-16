@@ -28,7 +28,6 @@ class Compasswidget(QtWidgets.QLabel):
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QColor(168, 34, 3))
-        #painter.fillRect(event.rect(), self.palette().brush(QPalette.Window))
         self.drawMarkings(painter)
         self.drawNeedle(painter)
         self.drawSecNeedle(painter)
@@ -56,8 +55,6 @@ class Compasswidget(QtWidgets.QLabel):
             if i % 30 == 0:
                 painter.setPen(Qt.red)
                 painter.drawLine(0, -40, 0, -50)
-                # painter.drawText(-metrics.width(self._pointText[i]) / 2, -52,
-                #                   self._pointText[i])
                 painter.drawText(QPointF(-metrics.width(self._pointText[i]) / 2, -52),
                                   self._pointText[i])
             else:
@@ -92,20 +89,6 @@ class Compasswidget(QtWidgets.QLabel):
         painter.setPen(QPen(Qt.NoPen))
         painter.setBrush(self.palette().brush(QPalette.Shadow))
 
-
-        # painter.drawPolygon(
-        #     QPolygon([QPoint(-10, 0), QPoint(0, -45), QPoint(10, 0),
-        #     QPoint(0, 45), QPoint(-10, 0)])
-        #     )
-
-        #painter.setBrush(self.palette().brush(QPalette.Highlight))
-    
-
-        # painter.setPen(QPen(QColor(121,252,50,100), 0, Qt.SolidLine))
-
-        # painter.setBrush(QBrush(QColor(52, 235, 225,200), Qt.SolidPattern))
-        # painter.drawPolygon([QPoint(0,0),QPoint(20,-50),QPoint(-20,-50)])
-        
         painter.setPen(QtCore.Qt.red)
         painter.drawLine(0, 0, 0, -45)
         
@@ -115,15 +98,7 @@ class Compasswidget(QtWidgets.QLabel):
             QPolygon([QPoint(-5, -25), QPoint(0, -45), QPoint(5, -25),
             QPoint(0, -30), QPoint(-5, -25)])
             )
-        # painter.drawRect(20,-40,-40,40)
 
-        #XX = QLineF(0,0,-20,60)
-        # PP = QPainterPath()
-        # PP.lineTo(20,-60)
-        # PP.moveTo(0,0)
-        # PP.lineTo(-20,-60)
-
-        #painter.drawArc(0,-20, 30,30, 0*16, 90*16)
         if (self.ShowAntennaBW):
             painter.setPen(QPen(QColor(255,51,255,100), 2, Qt.DotLine))
             BeamWidthOne = QLineF()
@@ -155,20 +130,10 @@ class Compasswidget(QtWidgets.QLabel):
         painter.setPen(QPen(Qt.NoPen))
         painter.setBrush(self.palette().brush(QPalette.Shadow))
 
-        # painter.drawPolygon(
-        #     QPolygon([QPoint(-10, 0), QPoint(0, -45), QPoint(10, 0),
-        #     QPoint(0, 45), QPoint(-10, 0)])
-        #     )
         painter.setPen(QtCore.Qt.blue)
         painter.drawLine(0, 0, 0, -45)
 
         painter.setPen(QtCore.Qt.green)
-        # painter.drawLine(0,0,20,-45)
-        # painter.drawLine(0,0,-20,-45)
-        # painter.drawLine(20, -45, -20, -45)
-
-        
-        #painter.setBrush(self.palette().brush(QPalette.Highlight))
 
         painter.setPen(Qt.black)
         painter.drawPolygon(
@@ -176,24 +141,16 @@ class Compasswidget(QtWidgets.QLabel):
             QPoint(0, -30), QPoint(-5, -25)])
             )
 
-
-
         painter.restore()
 
-    #def sizeHint(self):
-    #    return QSize(150, 150)
-
-    #def angle(self):
-    #    return self._angle
-
     def setAngle(self, angle):
-        # print(self._angle)
+
         if angle != self._angle:
             self._angle = angle
             self.update()
 
     def setSecAngle(self, angle):
-        # print(self._angle)
+
         if angle != self._secangle:
             self._secangle = angle
             self.update()
