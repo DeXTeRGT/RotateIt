@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, uic, QtCore, QtSerialPort, QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer
+from PyQt5.QtCore import Qt, QTimer
 import sys
 import Compasswidget
 import xmltodict
@@ -10,10 +10,10 @@ from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
 from SettingsHelper import SettingsWindow
 from AboutHelper import AboutWindow
-import time
+
 
 ReadConfiguration = ConfigParser()
-ReadConfiguration.read('Configuration.conf')
+ReadConfiguration.read('config/Configuration.conf')
 
 logger  = getLoggerHandle()
 
@@ -22,7 +22,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('AntRot.ui', self)
+        uic.loadUi('./resources/AntRot.ui', self)
 
         self.setWindowIcon(QtGui.QIcon('icon.png'))
 
@@ -32,13 +32,16 @@ class Ui(QtWidgets.QMainWindow):
         self.dialog = SettingsWindow(self)
         self.AboutDialog = AboutWindow(self)
 
-        self.fs_watcher = QtCore.QFileSystemWatcher(['Configuration.conf'])
+        self.fs_watcher = QtCore.QFileSystemWatcher(['config/Configuration.conf'])
         self.fs_watcher.fileChanged.connect(self.file_changed)
         
-        self.timer = QTimer()
-        self.timer.setTimerType(QtCore.Qt.VeryCoarseTimer)
-        self.timer.timeout.connect(self.StartScheduledRotor)
+        self.FirstTimer = QTimer()
+        self.FirstTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
+        self.FirstTimer.timeout.connect(self.StartScheduledRotor)
 
+        self.SecondTimer = QTimer()
+        self.SecondTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
+        self.SecondTimer.timeout.connect(self.StartScheduledRotor)
 
         self.RotDetails.setText('<font color=blue>'+ ReadConfiguration.get('ROTOR','ROTOR_ID') + " / " + ReadConfiguration.get('ROTOR','STATION_CALL') + "@" + ReadConfiguration.get('ROTOR','STATION_GRID')+ '</font>')
         self.IfLabel.setText("IF: " +  ReadConfiguration.get('UDP_SERVER','UDP_LISTEN_IF'))
@@ -54,6 +57,9 @@ class Ui(QtWidgets.QMainWindow):
 
 
         if (ReadConfiguration.getboolean('SCHED','SCHED_ENABLE')):
+            
+            
+
             self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
             self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
 
@@ -63,7 +69,9 @@ class Ui(QtWidgets.QMainWindow):
             self.diff = (self.ScheduledTime - self.CurrentTime) 
             logger.info("Timer will trigger after: " + str(int(self.diff.seconds/60)) + " minutes")        
             
-            self.timer.start(self.diff.seconds * 1000)
+            self.FirstTimer.start(self.diff.seconds * 1000)
+        else:
+            logger.info ("Scheduler is configured but the Scheduler was not enabled")
 
         selfSerialWorker = QueryRotorClass()
         self.SerialWorkerThread = QtCore.QThread()
@@ -106,42 +114,39 @@ class Ui(QtWidgets.QMainWindow):
         self.show()
 
     def StartScheduledRotor(self):
-        SetHeddingTo = 'M' + ReadConfiguration.get('SCHED','SCHED_HEDDING') + '\r\n'
-        self.SerialIO_Send(SetHeddingTo)
-        self.Compasswidget.setSecAngle(int(ReadConfiguration.get('SCHED','SCHED_HEDDING')))
-        logger.critical("Timer Arrived - action taken")
-        self.timer.stop()
+        ReadConfiguration.read('config/Configuration.conf')
+        if (abs(ReadConfiguration.getint('SCHED','SCHED_HEDDING') - int(self.Compasswidget.getAngle()))  > ReadConfiguration.getint('SCHED','SCHED_HEDDING_TOLERANCE')):
+            SetHeddingTo = 'M' + ReadConfiguration.get('SCHED','SCHED_HEDDING') + '\r\n'
+            self.SerialIO_Send(SetHeddingTo)
+            self.Compasswidget.setSecAngle(int(ReadConfiguration.get('SCHED','SCHED_HEDDING')))
+            logger.critical("Schedule triggered - moving antenna to hedding: " + ReadConfiguration.get('SCHED','SCHED_HEDDING') + " deg")
+            self.FirstTimer.stop()
+            self.SecondTimer.stop()
+        else:
+            print(ReadConfiguration.getint('SCHED','SCHED_HEDDING'))
+            print(self.Compasswidget.getAngle())
+            print(abs(ReadConfiguration.getint('SCHED','SCHED_HEDDING') - int(self.Compasswidget.getAngle())))
+            logger.warning ("Scheduled hedding is within set tolerance - scheduler triggered but antenna will not be moved")
+            self.FirstTimer.stop()
+            self.SecondTimer.stop()
 
     @QtCore.pyqtSlot(str)
     def file_changed(self,path):
-        self.timer.stop()
-        ReadConfiguration = ConfigParser()
-        ReadConfiguration.read('Configuration.conf')
-        self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
-        self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
+        self.FirstTimer.stop()
+        ReadConfiguration.read('config/Configuration.conf')
+        if (ReadConfiguration.getboolean('SCHED','SCHED_ENABLE')):
+            self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
+            self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
 
-        logger.info("Current time is *: " + str(self.CurrentTime))
-        logger.info("Scheduled time is *: " + str(self.ScheduledTime))
+            logger.info("Current time is *: " + str(self.CurrentTime))
+            logger.info("Scheduled time is *: " + str(self.ScheduledTime))
 
-        self.diff = (self.ScheduledTime - self.CurrentTime) 
-        logger.info("Timer will trigger after *: " + str(int(self.diff.seconds/60)) + " minutes")        
-        
-        self.timer.start(self.diff.seconds * 1000)
-
-
-    def UpdateRotorSchedule(self):
-            pass
-            # ReadConfiguration = ConfigParser()
-            # ReadConfiguration.read('Configuration.conf')
-            # self.CurrentTime = datetime.datetime.strptime(datetime.datetime.strftime(datetime.datetime.now(),'%H:%M:%S'), '%H:%M:%S')
-            # self.ScheduledTime = datetime.datetime.strptime(ReadConfiguration.get('SCHED','SCHED_TIME'), '%H:%M:%S')  
-
-            # logger.info("Current time is: " + str(self.CurrentTime))
-            # logger.info("Scheduled time is: " + str(self.ScheduledTime))
-
-            # self.diff = (self.ScheduledTime - self.CurrentTime) 
-            # logger.info("Timer will trigger after: " + str(self.diff.seconds/60) + " minutes")        
-            # self.timer.start(self.diff.seconds * 1000)
+            self.diff = (self.ScheduledTime - self.CurrentTime) 
+            logger.info("Timer will trigger after *: " + str(int(self.diff.seconds/60)) + " minutes")        
+            
+            self.SecondTimer.start(self.diff.seconds * 1000)
+        else:
+            logger.info ("Scheduler is configured but the Scheduler was not enabled")
 
     @QtCore.pyqtSlot()
     def SerialIO_Receive(self):

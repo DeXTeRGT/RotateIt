@@ -3,7 +3,7 @@ import coloredlogs
 from configparser import ConfigParser
 
 ReadConfiguration = ConfigParser()
-ReadConfiguration.read('Configuration.conf')
+ReadConfiguration.read('config/Configuration.conf')
 
 coloredlogs.install(level=ReadConfiguration.get('LOGGER','LOG_LEVEL'))
 

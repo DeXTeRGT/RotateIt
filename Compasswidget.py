@@ -5,7 +5,7 @@ from PyQt5.QtCore import QPointF, QPoint, Qt, QLineF
 from configparser import ConfigParser
 
 ReadConfiguration = ConfigParser()
-ReadConfiguration.read('Configuration.conf')
+ReadConfiguration.read('config/Configuration.conf')
 
 
 class Compasswidget(QtWidgets.QLabel):

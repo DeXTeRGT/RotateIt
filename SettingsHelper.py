@@ -5,15 +5,15 @@ from configparser import ConfigParser
 from LoggerHelper import getLoggerHandle
 
 ReadConfiguration = ConfigParser()
-ReadConfiguration.read('Configuration.conf')
+ReadConfiguration.read('config/Configuration.conf')
 logger  = getLoggerHandle()
 
 class SettingsWindow (QtWidgets.QMainWindow):
     def __init__(self,parent=None):
         super(SettingsWindow, self).__init__(parent)
-        uic.loadUi('Settings.ui', self)
+        uic.loadUi('resources/Settings.ui', self)
         self.LoadSettings()
-        self.setFixedSize(226, 330)
+        self.setFixedSize(250, 370)
 
         self.SaveComSettings.clicked.connect(self.SaveSettings)
 
@@ -43,6 +43,7 @@ class SettingsWindow (QtWidgets.QMainWindow):
         self.SchedEnable.setChecked(ReadConfiguration.getboolean('SCHED','SCHED_ENABLE'))
         self.SchedTime.setText(ReadConfiguration.get('SCHED','SCHED_TIME'))
         self.SchedHedding.setValue(ReadConfiguration.getint('SCHED','SCHED_HEDDING'))
+        self.HeddingTolerance.setText(ReadConfiguration.get('SCHED','SCHED_HEDDING_TOLERANCE'))
 
     def CreateInfoDlg(self,DlgText):
         msg = QMessageBox(self)
@@ -87,10 +88,10 @@ class SettingsWindow (QtWidgets.QMainWindow):
         ReadConfiguration.set('SCHED','SCHED_ENABLE',str(self.SchedEnable.isChecked()))
         ReadConfiguration.set('SCHED','SCHED_TIME',self.SchedTime.text())
         ReadConfiguration.set('SCHED','SCHED_HEDDING',str(self.SchedHedding.value()))
-
+        ReadConfiguration.set('SCHED','SCHED_HEDDING_TOLERANCE',str(self.HeddingTolerance.text()))
         
         # try:
-        with open('Configuration.conf', 'w') as configfile:
+        with open('config/Configuration.conf', 'w') as configfile:
             ReadConfiguration.write(configfile)
             
         logger.debug ("Settings were saved successfully! Well done!")

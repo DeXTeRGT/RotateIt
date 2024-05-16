@@ -5,7 +5,7 @@ from LoggerHelper import getLoggerHandle
 from configparser import ConfigParser
 
 ReadConfiguration = ConfigParser()
-ReadConfiguration.read('Configuration.conf')
+ReadConfiguration.read('config/Configuration.conf')
 
 logger  = getLoggerHandle()
 
