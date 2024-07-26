@@ -186,6 +186,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def UpdateUDP(self, udp_data):
         data = xmltodict.parse(udp_data)
+        print(data)
         try:
             if data.get('PST') is not None:
                 logger.debug ("Received an UDP package from DXLog")
